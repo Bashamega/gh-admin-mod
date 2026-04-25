@@ -1,5 +1,5 @@
 name: gh-admin-mod
-description: Close issues and pull requests opened by users listed in a simple blocklist file.
+description: Modular GitHub Action for blocking or auto-moderating issues and pull requests.
 
 inputs:
   blocked-users-file:
@@ -15,19 +15,19 @@ inputs:
     required: false
     default: "true"
   exempt-associations:
-    description: Comma-separated author associations that should never be blocked.
+    description: Comma-separated author associations that should never be moderated.
     required: false
     default: OWNER,MEMBER,COLLABORATOR
   comment-message:
     description: >
-      Comment posted before closing the issue or pull request. Supports {user},
-      {type}, {type_plural}, and {author_association}.
+      Comment posted when the blocklist feature closes an issue or pull request.
+      Supports {user}, {type}, {type_plural}, {author_association}, and {reason}.
     required: false
     default: >
       This {type} was automatically closed because @{user} is blocked from opening
       {type_plural} in this repository.
   add-label:
-    description: Optional label to add before closing the issue or pull request.
+    description: Optional label added for any moderation action.
     required: false
     default: ""
   lock-conversation:
@@ -39,13 +39,45 @@ inputs:
     required: false
     default: not_planned
   dry-run:
-    description: If true, only detect and report blocked users without changing anything.
+    description: If true, only detect and report moderation matches without changing anything.
     required: false
     default: "false"
+  auto-mode:
+    description: Enable automatic moderation heuristics for suspicious issues and pull requests.
+    required: false
+    default: "false"
+  auto-mode-keywords:
+    description: >
+      Comma-separated suspicious keywords or phrases matched against the title and body.
+    required: false
+    default: telegram,whatsapp,t.me,airdrop,bonus,dm me,contact me,investment opportunity
+  auto-mode-max-links:
+    description: >
+      Maximum allowed link count before auto-mode matches. Set to 0 to disable link counting.
+    required: false
+    default: "3"
+  auto-mode-new-contributors-only:
+    description: >
+      If true, auto-mode only applies to authors with association NONE, FIRST_TIMER, or
+      FIRST_TIME_CONTRIBUTOR.
+    required: false
+    default: "true"
+  auto-mode-comment-message:
+    description: >
+      Comment posted when auto-mode closes an issue or pull request. Supports {user},
+      {type}, {type_plural}, {author_association}, {reason}, {keywords}, and {link_count}.
+    required: false
+    default: >
+      This {type} was automatically closed by auto-mode because it matched suspicious
+      content checks: {reason}.
+  auto-mode-label:
+    description: Optional label added when auto-mode matches.
+    required: false
+    default: auto-moderated
 
 outputs:
   blocked:
-    description: Whether the current issue or pull request author matched the blocklist.
+    description: Whether the blocklist feature matched the author.
     value: ${{ steps.moderate.outputs.blocked }}
   blocked-user:
     description: The blocked username that matched, if any.
@@ -53,6 +85,12 @@ outputs:
   item-type:
     description: The moderated item type, either issue or pull_request.
     value: ${{ steps.moderate.outputs.item-type }}
+  matched-feature:
+    description: The feature that matched, such as blocklist or auto-mode.
+    value: ${{ steps.moderate.outputs.matched-feature }}
+  match-reason:
+    description: The reason returned by the matched moderation feature.
+    value: ${{ steps.moderate.outputs.match-reason }}
 
 runs:
   using: composite
@@ -70,4 +108,10 @@ runs:
         INPUT_LOCK_CONVERSATION: ${{ inputs.lock-conversation }}
         INPUT_CLOSE_REASON: ${{ inputs.close-reason }}
         INPUT_DRY_RUN: ${{ inputs.dry-run }}
+        INPUT_AUTO_MODE: ${{ inputs.auto-mode }}
+        INPUT_AUTO_MODE_KEYWORDS: ${{ inputs.auto-mode-keywords }}
+        INPUT_AUTO_MODE_MAX_LINKS: ${{ inputs.auto-mode-max-links }}
+        INPUT_AUTO_MODE_NEW_CONTRIBUTORS_ONLY: ${{ inputs.auto-mode-new-contributors-only }}
+        INPUT_AUTO_MODE_COMMENT_MESSAGE: ${{ inputs.auto-mode-comment-message }}
+        INPUT_AUTO_MODE_LABEL: ${{ inputs.auto-mode-label }}
       run: python3 "$GITHUB_ACTION_PATH/scripts/mod.py"

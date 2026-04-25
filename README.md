@@ -1,22 +1,20 @@
-# mod
+# gh-admin-mod
 
-`mod` is a simple reusable GitHub Action for repository moderation. It reads usernames from a simple blocklist file and automatically closes issues or pull requests opened by those users.
+`gh-admin-mod` is a reusable GitHub Action for repository moderation. The code is split into feature modules so you can keep adding moderation behavior without turning one script into a mess.
 
 ## Features
 
 - Blocks users listed in `blockedUser.md` or any other file you configure.
+- Supports `auto-mode` to automatically close suspicious issues and PRs from new contributors.
 - Can block issues, pull requests, or both.
-- Posts a configurable comment before closing the item.
-- Optionally adds a label and locks the conversation.
-- Lets you exempt trusted author associations like `OWNER`, `MEMBER`, or `COLLABORATOR`.
-- Supports a `dry-run` mode so you can verify behavior before enforcing it.
-- Keeps the action YAML small by running the moderation logic from Python.
+- Posts configurable comments before closing items.
+- Optionally adds labels and locks conversations.
+- Exempts trusted author associations like `OWNER`, `MEMBER`, or `COLLABORATOR`.
+- Supports `dry-run` for testing rules without closing anything.
 
-## Blocklist format
+## Blocked users file
 
-By default the action reads `blockedUser.md` from the repository root. The file should contain only usernames, one per line.
-
-Example:
+By default the action reads `blockedUser.md` from the repository root. Keep it as a simple list with one username per line.
 
 ```md
 @mike
@@ -24,11 +22,20 @@ Example:
 badactor123
 ```
 
-Lines starting with `#` are ignored, so you can still add comments if you need them.
+Lines starting with `#` are ignored.
+
+## Auto-mode
+
+`auto-mode` is a simple built-in moderation feature for suspicious content. When enabled, it checks the issue or PR title/body for:
+
+- configured keywords or phrases
+- too many links
+
+By default it only applies to `NONE`, `FIRST_TIMER`, and `FIRST_TIME_CONTRIBUTOR` authors. That keeps it focused on new contributors instead of maintainers and established collaborators.
 
 ## Usage
 
-This action needs the repository checked out first so it can read your blocklist file.
+Check out the repository first so the action can read your blocklist file when the blocklist feature is enabled.
 
 ```yaml
 name: Moderate Issues And PRs
@@ -54,7 +61,8 @@ jobs:
           blocked-users-file: blockedUser.md
           block-issues: "true"
           block-prs: "true"
-          add-label: blocked-user
+          auto-mode: "true"
+          add-label: moderated
 ```
 
 If you are using the action locally from the same repository:
@@ -70,22 +78,30 @@ If you are using the action locally from the same repository:
 | `blocked-users-file` | `blockedUser.md` | Path to the blocklist file containing one username per line. |
 | `block-issues` | `"true"` | Close issues opened by blocked users. |
 | `block-prs` | `"true"` | Close pull requests opened by blocked users. |
-| `exempt-associations` | `OWNER,MEMBER,COLLABORATOR` | Comma-separated author associations that should bypass blocking. |
-| `comment-message` | see `action.yml` | Comment template posted before closing. Supports `{user}`, `{type}`, `{type_plural}`, `{author_association}`. |
-| `add-label` | `""` | Optional label to add before closing the issue or pull request. |
+| `exempt-associations` | `OWNER,MEMBER,COLLABORATOR` | Comma-separated author associations that bypass all moderation features. |
+| `comment-message` | see `action.yml` | Comment template used by the blocklist feature. Supports `{user}`, `{type}`, `{type_plural}`, `{author_association}`, `{reason}`. |
+| `add-label` | `""` | Optional label added for any moderation action. |
 | `lock-conversation` | `"false"` | Lock the issue or pull request after closing it. |
 | `close-reason` | `not_planned` | Issue close reason. Ignored for pull requests. |
 | `dry-run` | `"false"` | Detect matches without commenting or closing anything. |
+| `auto-mode` | `"false"` | Enable suspicious-content auto moderation. |
+| `auto-mode-keywords` | `telegram,whatsapp,t.me,airdrop,bonus,dm me,contact me,investment opportunity` | Comma-separated phrases checked against the title and body. |
+| `auto-mode-max-links` | `"3"` | Link-count threshold for auto moderation. Set `0` to disable link counting. |
+| `auto-mode-new-contributors-only` | `"true"` | Restrict auto-mode to `NONE`, `FIRST_TIMER`, and `FIRST_TIME_CONTRIBUTOR`. |
+| `auto-mode-comment-message` | see `action.yml` | Comment template used by auto-mode. Supports `{user}`, `{type}`, `{type_plural}`, `{author_association}`, `{reason}`, `{keywords}`, `{link_count}`. |
+| `auto-mode-label` | `auto-moderated` | Extra label applied when auto-mode matches. |
 
 ## Outputs
 
 | Output | Description |
 | --- | --- |
-| `blocked` | `true` when the author matched the blocklist. |
+| `blocked` | `true` when the blocklist feature matched the author. |
 | `blocked-user` | The username that matched the blocklist. |
 | `item-type` | `issue` or `pull_request`. |
+| `matched-feature` | The feature that matched, such as `blocklist` or `auto-mode`. |
+| `match-reason` | The reason returned by the matched feature. |
 
-## Example configurations
+## Examples
 
 Block only issues:
 
@@ -96,7 +112,7 @@ Block only issues:
     block-prs: "false"
 ```
 
-Custom comment and alternate blocklist file:
+Custom blocklist comment and alternate blocklist file:
 
 ```yaml
 - uses: Bashamega/gh-admin-mod@v1
@@ -107,6 +123,27 @@ Custom comment and alternate blocklist file:
       This {type} has been closed automatically.
 ```
 
+Enable auto-mode with custom heuristics:
+
+```yaml
+- uses: Bashamega/gh-admin-mod@v1
+  with:
+    auto-mode: "true"
+    auto-mode-keywords: telegram,whatsapp,forex,airdrop,dm me
+    auto-mode-max-links: "2"
+    auto-mode-label: suspicious
+```
+
+Use auto-mode only:
+
+```yaml
+- uses: Bashamega/gh-admin-mod@v1
+  with:
+    block-issues: "false"
+    block-prs: "false"
+    auto-mode: "true"
+```
+
 Dry run:
 
 ```yaml
@@ -115,6 +152,17 @@ Dry run:
     dry-run: "true"
 ```
 
+## Project layout
+
+- [action.yml](./action.yml) keeps the GitHub Action inputs and runner wiring.
+- [scripts/mod.py](./scripts/mod.py) is the entry point.
+- [scripts/gh_admin_mod/runner.py](./scripts/gh_admin_mod/runner.py) handles orchestration.
+- [scripts/gh_admin_mod/features/blocklist.py](./scripts/gh_admin_mod/features/blocklist.py) contains the blocklist feature.
+- [scripts/gh_admin_mod/features/automode.py](./scripts/gh_admin_mod/features/automode.py) contains the auto-mode feature.
+
 ## Notes
 
 - `pull_request_target` is recommended for pull request moderation because it runs with the base repository context and can close PRs from forks.
+- The action only moderates newly opened or reopened issues and pull requests.
+- Feature order is currently `blocklist` first, then `auto-mode`. The first matching feature takes the action.
+- If you want only `auto-mode`, disable `block-issues` and `block-prs` or provide a `blockedUser.md` file.
