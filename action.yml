@@ -1,4 +1,4 @@
-name: mod
+name: gh-admin-mod
 description: Close issues and pull requests opened by users listed in a simple blocklist file.
 
 inputs:
