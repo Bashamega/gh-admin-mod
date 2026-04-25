@@ -22,4 +22,5 @@ jobs:
           block-issues: "true"
           block-prs: "true"
           auto-mod: "true"
+          concurrency-enabled: "true"
           add-label: moderated

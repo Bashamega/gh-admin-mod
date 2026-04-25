@@ -74,6 +74,23 @@ inputs:
     description: Optional label added when auto-mod matches.
     required: false
     default: auto-moderated
+  concurrency-enabled:
+    description: Whether to enable the concurrency limit feature.
+    required: false
+    default: "false"
+  concurrency-limits:
+    description: >
+      Association-based limits as comma-separated KEY=VALUE pairs.
+      Supported keys: OWNER, MEMBER, COLLABORATOR, CONTRIBUTOR, FIRST_TIMER,
+      FIRST_TIME_CONTRIBUTOR, NONE. Value 0 means unlimited.
+    required: false
+    default: NONE=1,FIRST_TIMER=1,FIRST_TIME_CONTRIBUTOR=1,CONTRIBUTOR=10,COLLABORATOR=10,MEMBER=10
+  concurrency-comment-message:
+    description: >
+      Comment posted when the concurrency feature closes an item.
+      Supports {user}, {type}, {type_plural}, {author_association}, {reason}, {limit}, and {count}.
+    required: false
+    default: ""
 
 outputs:
   blocked:
@@ -114,4 +131,7 @@ runs:
         INPUT_AUTO_MOD_NEW_CONTRIBUTORS_ONLY: ${{ inputs.auto-mod-new-contributors-only }}
         INPUT_AUTO_MOD_COMMENT_MESSAGE: ${{ inputs.auto-mod-comment-message }}
         INPUT_AUTO_MOD_LABEL: ${{ inputs.auto-mod-label }}
+        INPUT_CONCURRENCY_ENABLED: ${{ inputs.concurrency-enabled }}
+        INPUT_CONCURRENCY_LIMITS: ${{ inputs.concurrency-limits }}
+        INPUT_CONCURRENCY_COMMENT_MESSAGE: ${{ inputs.concurrency-comment-message }}
       run: python3 "$GITHUB_ACTION_PATH/scripts/mod.py"

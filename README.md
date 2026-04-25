@@ -5,6 +5,7 @@
 ## Features
 
 - Blocks users listed in `blockedUser.md` or any other file you configure.
+- Supports `concurrency-enabled` to limit the number of open issues or PRs per user based on association.
 - Supports `auto-mod` to automatically close suspicious issues and PRs from new contributors.
 - Can block issues, pull requests, or both.
 - Posts configurable comments before closing items.
@@ -32,6 +33,17 @@ Lines starting with `#` are ignored.
 - too many links
 
 By default it only applies to `NONE`, `FIRST_TIMER`, and `FIRST_TIME_CONTRIBUTOR` authors. That keeps it focused on new contributors instead of maintainers and established collaborators.
+
+## Concurrency limits
+
+The `concurrency` feature prevents users from opening too many items at once. When enabled, it counts the user's currently open issues (or PRs) and closes the new one if they have reached their limit.
+
+Limits are defined per GitHub author association. By default:
+- `NONE`, `FIRST_TIMER`, `FIRST_TIME_CONTRIBUTOR`: 1 open item
+- `CONTRIBUTOR`, `COLLABORATOR`, `MEMBER`: 10 open items
+- `OWNER`: unlimited (0)
+
+You can customize these by providing a comma-separated list of `KEY=VALUE` pairs.
 
 ## Usage
 
@@ -90,6 +102,9 @@ If you are using the action locally from the same repository:
 | `auto-mod-new-contributors-only` | `"true"` | Restrict auto-mod to `NONE`, `FIRST_TIMER`, and `FIRST_TIME_CONTRIBUTOR`. |
 | `auto-mod-comment-message` | see `action.yml` | Comment template used by auto-mod. Supports `{user}`, `{type}`, `{type_plural}`, `{author_association}`, `{reason}`, `{keywords}`, `{link_count}`. |
 | `auto-mod-label` | `auto-moderated` | Extra label applied when auto-mod matches. |
+| `concurrency-enabled` | `"false"` | Enable association-based concurrency limits. |
+| `concurrency-limits` | see `action.yml` | Association-based limits (e.g., `NONE=1,CONTRIBUTOR=10`). Value `0` is unlimited. |
+| `concurrency-comment-message` | see `action.yml` | Comment template used by concurrency. Supports `{limit}`, `{count}` and standard placeholders. |
 
 ## Outputs
 
@@ -158,11 +173,12 @@ Dry run:
 - [scripts/mod.py](./scripts/mod.py) is the entry point.
 - [scripts/gh_admin_mod/runner.py](./scripts/gh_admin_mod/runner.py) handles orchestration.
 - [scripts/gh_admin_mod/features/blocklist.py](./scripts/gh_admin_mod/features/blocklist.py) contains the blocklist feature.
+- [scripts/gh_admin_mod/features/concurrency.py](./scripts/gh_admin_mod/features/concurrency.py) contains the concurrency limit feature.
 - [scripts/gh_admin_mod/features/automod.py](./scripts/gh_admin_mod/features/automod.py) contains the auto-mod feature.
 
 ## Notes
 
 - `pull_request_target` is recommended for pull request moderation because it runs with the base repository context and can close PRs from forks.
 - The action only moderates newly opened or reopened issues and pull requests.
-- Feature order is currently `blocklist` first, then `auto-mod`. The first matching feature takes the action.
+- Feature order is currently `blocklist` -> `concurrency` -> `auto-mod`. The first matching feature takes the action.
 - If you want only `auto-mod`, disable `block-issues` and `block-prs` or provide a `blockedUser.md` file.

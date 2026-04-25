@@ -79,3 +79,10 @@ def lock_item(context: ModerationContext) -> None:
         f"{_base_api(context)}/issues/{context.issue_number}/lock",
         {"lock_reason": "resolved"},
     )
+
+
+def count_open_items(context: ModerationContext, author: str, item_type: str) -> int:
+    query = f"repo:{context.owner}/{context.repo}+type:{item_type}+state:open+author:{author}"
+    url = f"https://api.github.com/search/issues?q={query}"
+    result = api_request("GET", url)
+    return int((result or {}).get("total_count", 0))

@@ -1,6 +1,6 @@
 from gh_admin_mod.context import load_context
 from gh_admin_mod.env import get_env, parse_bool, parse_upper_set
-from gh_admin_mod.features import automod, blocklist
+from gh_admin_mod.features import automod, blocklist, concurrency
 from gh_admin_mod.github_api import add_labels, close_item, create_comment, lock_item
 from gh_admin_mod.logging import fail, notice
 from gh_admin_mod.models import FeatureResult
@@ -52,6 +52,9 @@ def main() -> None:
         return
 
     result = blocklist.evaluate(context)
+    if not result.matched:
+        result = concurrency.evaluate(context)
+
     if not result.matched:
         result = automod.evaluate(context)
 

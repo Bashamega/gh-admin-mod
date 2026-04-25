@@ -8,9 +8,17 @@ def render_template(template: str, context: ModerationContext, result: FeatureRe
         "type_plural": context.item_type_plural,
         "author_association": context.author_association or "NONE",
         "reason": result.reason,
-        "keywords": result.metadata.get("keywords", ""),
-        "link_count": result.metadata.get("link_count", "0"),
     }
+
+    # Add all metadata values
+    for key, value in result.metadata.items():
+        values[key] = value
+
+    # Compatibility for specific keywords if they aren't in metadata
+    if "keywords" not in values:
+        values["keywords"] = result.metadata.get("keywords", "")
+    if "link_count" not in values:
+        values["link_count"] = result.metadata.get("link_count", "0")
 
     rendered = template
     for key, value in values.items():
