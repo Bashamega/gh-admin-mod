@@ -1,0 +1,73 @@
+name: mod
+description: Close issues and pull requests opened by users listed in a simple blocklist file.
+
+inputs:
+  blocked-users-file:
+    description: Path to the file containing blocked usernames, one per line.
+    required: false
+    default: blockedUser.md
+  block-issues:
+    description: Whether blocked users should be prevented from opening issues.
+    required: false
+    default: "true"
+  block-prs:
+    description: Whether blocked users should be prevented from opening pull requests.
+    required: false
+    default: "true"
+  exempt-associations:
+    description: Comma-separated author associations that should never be blocked.
+    required: false
+    default: OWNER,MEMBER,COLLABORATOR
+  comment-message:
+    description: >
+      Comment posted before closing the issue or pull request. Supports {user},
+      {type}, {type_plural}, and {author_association}.
+    required: false
+    default: >
+      This {type} was automatically closed because @{user} is blocked from opening
+      {type_plural} in this repository.
+  add-label:
+    description: Optional label to add before closing the issue or pull request.
+    required: false
+    default: ""
+  lock-conversation:
+    description: Whether to lock the conversation after closing it.
+    required: false
+    default: "false"
+  close-reason:
+    description: State reason used when closing issues.
+    required: false
+    default: not_planned
+  dry-run:
+    description: If true, only detect and report blocked users without changing anything.
+    required: false
+    default: "false"
+
+outputs:
+  blocked:
+    description: Whether the current issue or pull request author matched the blocklist.
+    value: ${{ steps.moderate.outputs.blocked }}
+  blocked-user:
+    description: The blocked username that matched, if any.
+    value: ${{ steps.moderate.outputs.blocked-user }}
+  item-type:
+    description: The moderated item type, either issue or pull_request.
+    value: ${{ steps.moderate.outputs.item-type }}
+
+runs:
+  using: composite
+  steps:
+    - id: moderate
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        INPUT_BLOCKED_USERS_FILE: ${{ inputs.blocked-users-file }}
+        INPUT_BLOCK_ISSUES: ${{ inputs.block-issues }}
+        INPUT_BLOCK_PRS: ${{ inputs.block-prs }}
+        INPUT_EXEMPT_ASSOCIATIONS: ${{ inputs.exempt-associations }}
+        INPUT_COMMENT_MESSAGE: ${{ inputs.comment-message }}
+        INPUT_ADD_LABEL: ${{ inputs.add-label }}
+        INPUT_LOCK_CONVERSATION: ${{ inputs.lock-conversation }}
+        INPUT_CLOSE_REASON: ${{ inputs.close-reason }}
+        INPUT_DRY_RUN: ${{ inputs.dry-run }}
+      run: python3 "$GITHUB_ACTION_PATH/scripts/mod.py"
