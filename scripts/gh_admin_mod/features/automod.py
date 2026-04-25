@@ -13,10 +13,10 @@ def _content(context: ModerationContext) -> str:
 
 
 def evaluate(context: ModerationContext) -> FeatureResult:
-    if not parse_bool(get_env("INPUT_AUTO_MODE", "false")):
+    if not parse_bool(get_env("INPUT_AUTO_MOD", "false")):
         return FeatureResult(matched=False)
 
-    if parse_bool(get_env("INPUT_AUTO_MODE_NEW_CONTRIBUTORS_ONLY", "true")):
+    if parse_bool(get_env("INPUT_AUTO_MOD_NEW_CONTRIBUTORS_ONLY", "true")):
         if context.author_association not in NEW_CONTRIBUTOR_ASSOCIATIONS:
             return FeatureResult(matched=False)
 
@@ -24,10 +24,10 @@ def evaluate(context: ModerationContext) -> FeatureResult:
     lowered = content.lower()
     keywords = [
         keyword
-        for keyword in parse_csv(get_env("INPUT_AUTO_MODE_KEYWORDS", ""))
+        for keyword in parse_csv(get_env("INPUT_AUTO_MOD_KEYWORDS", ""))
         if keyword.lower() in lowered
     ]
-    max_links = parse_int(get_env("INPUT_AUTO_MODE_MAX_LINKS", "3"), 3)
+    max_links = parse_int(get_env("INPUT_AUTO_MOD_MAX_LINKS", "3"), 3)
     link_count = len(LINK_PATTERN.findall(content))
 
     reasons: list[str] = []
@@ -41,9 +41,9 @@ def evaluate(context: ModerationContext) -> FeatureResult:
 
     result = FeatureResult(
         matched=True,
-        feature="auto-mode",
+        feature="auto-mod",
         reason="; ".join(reasons),
-        labels=[get_env("INPUT_AUTO_MODE_LABEL", "").strip()],
+        labels=[get_env("INPUT_AUTO_MOD_LABEL", "").strip()],
         metadata={
             "keywords": ", ".join(keywords),
             "link_count": str(link_count),
@@ -51,7 +51,7 @@ def evaluate(context: ModerationContext) -> FeatureResult:
     )
     result.labels = [label for label in result.labels if label]
     result.comment_message = render_template(
-        get_env("INPUT_AUTO_MODE_COMMENT_MESSAGE", ""),
+        get_env("INPUT_AUTO_MOD_COMMENT_MESSAGE", ""),
         context,
         result,
     )

@@ -5,7 +5,7 @@
 ## Features
 
 - Blocks users listed in `blockedUser.md` or any other file you configure.
-- Supports `auto-mode` to automatically close suspicious issues and PRs from new contributors.
+- Supports `auto-mod` to automatically close suspicious issues and PRs from new contributors.
 - Can block issues, pull requests, or both.
 - Posts configurable comments before closing items.
 - Optionally adds labels and locks conversations.
@@ -24,9 +24,9 @@ badactor123
 
 Lines starting with `#` are ignored.
 
-## Auto-mode
+## Auto-mod
 
-`auto-mode` is a simple built-in moderation feature for suspicious content. When enabled, it checks the issue or PR title/body for:
+`auto-mod` is a simple built-in moderation feature for suspicious content. When enabled, it checks the issue or PR title/body for:
 
 - configured keywords or phrases
 - too many links
@@ -61,7 +61,7 @@ jobs:
           blocked-users-file: blockedUser.md
           block-issues: "true"
           block-prs: "true"
-          auto-mode: "true"
+          auto-mod: "true"
           add-label: moderated
 ```
 
@@ -84,12 +84,12 @@ If you are using the action locally from the same repository:
 | `lock-conversation` | `"false"` | Lock the issue or pull request after closing it. |
 | `close-reason` | `not_planned` | Issue close reason. Ignored for pull requests. |
 | `dry-run` | `"false"` | Detect matches without commenting or closing anything. |
-| `auto-mode` | `"false"` | Enable suspicious-content auto moderation. |
-| `auto-mode-keywords` | `telegram,whatsapp,t.me,airdrop,bonus,dm me,contact me,investment opportunity` | Comma-separated phrases checked against the title and body. |
-| `auto-mode-max-links` | `"3"` | Link-count threshold for auto moderation. Set `0` to disable link counting. |
-| `auto-mode-new-contributors-only` | `"true"` | Restrict auto-mode to `NONE`, `FIRST_TIMER`, and `FIRST_TIME_CONTRIBUTOR`. |
-| `auto-mode-comment-message` | see `action.yml` | Comment template used by auto-mode. Supports `{user}`, `{type}`, `{type_plural}`, `{author_association}`, `{reason}`, `{keywords}`, `{link_count}`. |
-| `auto-mode-label` | `auto-moderated` | Extra label applied when auto-mode matches. |
+| `auto-mod` | `"false"` | Enable suspicious-content auto moderation. |
+| `auto-mod-keywords` | `telegram,whatsapp,t.me,airdrop,bonus,dm me,contact me,investment opportunity` | Comma-separated phrases checked against the title and body. |
+| `auto-mod-max-links` | `"3"` | Link-count threshold for auto moderation. Set `0` to disable link counting. |
+| `auto-mod-new-contributors-only` | `"true"` | Restrict auto-mod to `NONE`, `FIRST_TIMER`, and `FIRST_TIME_CONTRIBUTOR`. |
+| `auto-mod-comment-message` | see `action.yml` | Comment template used by auto-mod. Supports `{user}`, `{type}`, `{type_plural}`, `{author_association}`, `{reason}`, `{keywords}`, `{link_count}`. |
+| `auto-mod-label` | `auto-moderated` | Extra label applied when auto-mod matches. |
 
 ## Outputs
 
@@ -98,7 +98,7 @@ If you are using the action locally from the same repository:
 | `blocked` | `true` when the blocklist feature matched the author. |
 | `blocked-user` | The username that matched the blocklist. |
 | `item-type` | `issue` or `pull_request`. |
-| `matched-feature` | The feature that matched, such as `blocklist` or `auto-mode`. |
+| `matched-feature` | The feature that matched, such as `blocklist` or `auto-mod`. |
 | `match-reason` | The reason returned by the matched feature. |
 
 ## Examples
@@ -123,25 +123,25 @@ Custom blocklist comment and alternate blocklist file:
       This {type} has been closed automatically.
 ```
 
-Enable auto-mode with custom heuristics:
+Enable auto-mod with custom heuristics:
 
 ```yaml
 - uses: Bashamega/gh-admin-mod@v1
   with:
-    auto-mode: "true"
-    auto-mode-keywords: telegram,whatsapp,forex,airdrop,dm me
-    auto-mode-max-links: "2"
-    auto-mode-label: suspicious
+    auto-mod: "true"
+    auto-mod-keywords: telegram,whatsapp,forex,airdrop,dm me
+    auto-mod-max-links: "2"
+    auto-mod-label: suspicious
 ```
 
-Use auto-mode only:
+Use auto-mod only:
 
 ```yaml
 - uses: Bashamega/gh-admin-mod@v1
   with:
     block-issues: "false"
     block-prs: "false"
-    auto-mode: "true"
+    auto-mod: "true"
 ```
 
 Dry run:
@@ -158,11 +158,11 @@ Dry run:
 - [scripts/mod.py](./scripts/mod.py) is the entry point.
 - [scripts/gh_admin_mod/runner.py](./scripts/gh_admin_mod/runner.py) handles orchestration.
 - [scripts/gh_admin_mod/features/blocklist.py](./scripts/gh_admin_mod/features/blocklist.py) contains the blocklist feature.
-- [scripts/gh_admin_mod/features/automode.py](./scripts/gh_admin_mod/features/automode.py) contains the auto-mode feature.
+- [scripts/gh_admin_mod/features/automod.py](./scripts/gh_admin_mod/features/automod.py) contains the auto-mod feature.
 
 ## Notes
 
 - `pull_request_target` is recommended for pull request moderation because it runs with the base repository context and can close PRs from forks.
 - The action only moderates newly opened or reopened issues and pull requests.
-- Feature order is currently `blocklist` first, then `auto-mode`. The first matching feature takes the action.
-- If you want only `auto-mode`, disable `block-issues` and `block-prs` or provide a `blockedUser.md` file.
+- Feature order is currently `blocklist` first, then `auto-mod`. The first matching feature takes the action.
+- If you want only `auto-mod`, disable `block-issues` and `block-prs` or provide a `blockedUser.md` file.
