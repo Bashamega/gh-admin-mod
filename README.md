@@ -118,5 +118,3 @@ Dry run:
 ## Notes
 
 - `pull_request_target` is recommended for pull request moderation because it runs with the base repository context and can close PRs from forks.
-- The action only moderates new or reopened issues and pull requests. It does not block comments, reviews, or other activity.
-- The moderation logic lives in [scripts/mod.py](/Users/adam/gh-admin-mod/scripts/mod.py), not inline in `action.yml`.
