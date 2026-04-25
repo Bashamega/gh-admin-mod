@@ -1,0 +1,25 @@
+name: Moderate Issues And PRs
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  mod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./
+        with:
+          blocked-users-file: blockedUser.md
+          block-issues: "true"
+          block-prs: "true"
+          auto-mod: "true"
+          add-label: moderated

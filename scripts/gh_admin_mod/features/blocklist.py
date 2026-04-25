@@ -14,7 +14,7 @@ def _load_blocked_users(blocked_users_file: str) -> set[str]:
     blocklist_path = Path(workspace, blocked_users_file).resolve()
     if not blocklist_path.exists():
         fail(
-            f"Blocked users file not found at {blocked_users_file}. "
+            f"Blocked users file not found at {blocklist_path}. "
             "Make sure the repository is checked out before this action runs."
         )
 
