@@ -2,6 +2,10 @@ name: gh-admin-mod
 description: Modular GitHub Action for blocking or auto-moderating issues and pull requests.
 
 inputs:
+  github-token:
+    description: 'GitHub token for API requests.'
+    required: false
+    default: ${{ github.token }}
   blocked-users-file:
     description: Path to the file containing blocked usernames, one per line.
     required: false

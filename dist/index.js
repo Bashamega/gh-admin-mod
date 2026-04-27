@@ -29989,8 +29989,8 @@ function loadContext() {
         sender_association: senderAssociation,
         author: (payloadItem.user?.login || '').trim(),
         author_association: (payloadItem.author_association || '').toUpperCase(),
-        title: (payloadItem.title || ''),
-        body: (payloadItem.body || ''),
+        title: payloadItem.title || '',
+        body: payloadItem.body || '',
     };
 }
 
@@ -30093,11 +30093,25 @@ function getContent(context) {
 }
 function evaluate(context) {
     if (!(0, env_js_1.parseBool)(core.getInput('auto-mod') || 'false')) {
-        return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
     }
     if ((0, env_js_1.parseBool)(core.getInput('auto-mod-new-contributors-only') || 'true')) {
         if (!NEW_CONTRIBUTOR_ASSOCIATIONS.has(context.author_association)) {
-            return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+            return {
+                matched: false,
+                feature: '',
+                reason: '',
+                labels: [],
+                lock_conversation: false,
+                metadata: {},
+            };
         }
     }
     const content = getContent(context);
@@ -30115,7 +30129,14 @@ function evaluate(context) {
         reasons.push(`contains ${linkCount} links (threshold: ${maxLinks})`);
     }
     if (reasons.length === 0) {
-        return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
     }
     const result = {
         matched: true,
@@ -30203,15 +30224,36 @@ function loadBlockedUsers(blockedUsersFile) {
 }
 function evaluate(context) {
     if (context.is_pull_request && !(0, env_js_1.parseBool)(core.getInput('block-prs') || 'true')) {
-        return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
     }
     if (!context.is_pull_request && !(0, env_js_1.parseBool)(core.getInput('block-issues') || 'true')) {
-        return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
     }
     const blockedUsers = loadBlockedUsers(core.getInput('blocked-users-file') || 'blockedUser.md');
     const normalizedAuthor = (0, env_js_1.normalizeUser)(context.author);
     if (!blockedUsers.has(normalizedAuthor)) {
-        return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
     }
     const result = {
         matched: true,
@@ -30288,7 +30330,14 @@ function parseLimits(rawLimits) {
 }
 async function evaluate(context) {
     if (!(0, env_js_1.parseBool)(core.getInput('concurrency-enabled') || 'false')) {
-        return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
     }
     const rawLimits = core.getInput('concurrency-limits') ||
         'NONE=1,FIRST_TIMER=1,FIRST_TIME_CONTRIBUTOR=1,CONTRIBUTOR=10,COLLABORATOR=10,MEMBER=10';
@@ -30296,11 +30345,25 @@ async function evaluate(context) {
     const limit = limits[context.author_association.toUpperCase()];
     // If limit is 0, it means unlimited. If undefined, no limit defined for this association.
     if (limit === undefined || limit <= 0) {
-        return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
     }
     const currentCount = await (0, github_api_js_1.countOpenItems)(context, context.author, context.item_type);
     if (currentCount <= limit) {
-        return { matched: false, feature: '', reason: '', labels: [], lock_conversation: false, metadata: {} };
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
     }
     const result = {
         matched: true,
@@ -30371,7 +30434,9 @@ exports.countOpenItems = countOpenItems;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 function getOctokit() {
-    const token = core.getInput('GITHUB_TOKEN', { required: false }) || process.env.GITHUB_TOKEN;
+    const token = core.getInput('github-token', { required: false }) ||
+        core.getInput('GITHUB_TOKEN', { required: false }) ||
+        process.env.GITHUB_TOKEN;
     if (!token) {
         throw new Error('GITHUB_TOKEN is not available.');
     }

@@ -3,7 +3,10 @@ import * as github from '@actions/github';
 import { ModerationContext } from './models.js';
 
 function getOctokit() {
-  const token = core.getInput('GITHUB_TOKEN', { required: false }) || process.env.GITHUB_TOKEN;
+  const token =
+    core.getInput('github-token', { required: false }) ||
+    core.getInput('GITHUB_TOKEN', { required: false }) ||
+    process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error('GITHUB_TOKEN is not available.');
   }
