@@ -30114,6 +30114,21 @@ function evaluate(context) {
             };
         }
     }
+    console.log(context);
+    // don't do anything if the user that reopened it is the owner or maintainer
+    // Check if this is a reopen event (action == 'reopened'), and 
+    // if the sender (who performed the action) is owner or maintainer.
+    if (context.action === 'reopened' &&
+        ['OWNER', 'REPOSITORY_OWNER', 'MEMBER', 'COLLABORATOR', 'MAINTAINER'].includes((context.sender_association || '').toUpperCase())) {
+        return {
+            matched: false,
+            feature: '',
+            reason: '',
+            labels: [],
+            lock_conversation: false,
+            metadata: {},
+        };
+    }
     const content = getContent(context);
     const lowered = content.toLowerCase();
     const keywordsInput = core.getInput('auto-mod-keywords') || '';
