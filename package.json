@@ -1,6 +1,6 @@
 {
   "name": "gh-admin-mod",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Modular GitHub Action for blocking or auto-moderating issues and pull requests.",
   "main": "dist/index.js",
   "scripts": {
