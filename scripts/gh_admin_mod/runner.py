@@ -50,6 +50,7 @@ def main() -> None:
             f"{context.author_association} is exempt."
         )
         return
+    print(context)
 
     if context.action == "reopened" and context.sender_association in exempt_associations:
         notice(
