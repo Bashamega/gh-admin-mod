@@ -29965,33 +29965,62 @@ exports.loadContext = loadContext;
 const github = __importStar(__nccwpck_require__(3228));
 function loadContext() {
     const { payload } = github.context;
-    const issue = payload.issue;
-    const pullRequest = payload.pull_request;
-    const payloadItem = issue || pullRequest;
-    console.debug('Full GitHub event payload:', JSON.stringify(payload, null, 2));
+    const isPullRequest = !!payload.pull_request;
+    const payloadItem = payload.pull_request || payload.issue;
+    let owner = '';
+    let repo = '';
+    if (payload.repository && payload.repository.owner && payload.repository.name) {
+        owner =
+            (typeof payload.repository.owner === 'object'
+                ? payload.repository.owner.login
+                : payload.repository.owner) || '';
+        repo = payload.repository.name;
+    }
+    else {
+        owner = github.context.repo.owner;
+        repo = github.context.repo.repo;
+    }
+    const action = payload.action || '';
+    const sender = (payload.sender && typeof payload.sender.login === 'string'
+        ? payload.sender.login
+        : '') || '';
+    if (owner && sender && owner === sender) {
+        // If the repo owner is the sender, just return owner string
+        // (this means the function's type would be string, NOT ModerationContext,
+        // but keeping the contract, so return as a property)
+        return owner;
+    }
+    let sender_association = '';
+    if (payload.sender &&
+        typeof payload.sender.author_association === 'string') {
+        sender_association = payload.sender.author_association.toUpperCase();
+    }
+    else if (typeof payload.author_association === 'string') {
+        sender_association = payload.author_association.toUpperCase();
+    }
+    const author = payloadItem?.user?.login || '';
+    const author_association = (payloadItem?.author_association || '').toUpperCase();
+    const title = payloadItem?.title || '';
+    const body = payloadItem?.body || '';
     if (!payloadItem) {
         throw new Error('This action only supports issue and pull request events.');
     }
-    const { owner, repo } = github.context.repo;
-    const isPullRequest = !!pullRequest;
-    const senderAssociation = (payload.author_association ||
-        payload.sender?.author_association ||
-        '').toUpperCase();
+    const issue_number = payloadItem.number;
     return {
         owner,
         repo,
-        issue_number: payloadItem.number,
+        issue_number,
         is_pull_request: isPullRequest,
         item_type: isPullRequest ? 'pull_request' : 'issue',
         item_type_label: isPullRequest ? 'pull request' : 'issue',
         item_type_plural: isPullRequest ? 'pull requests' : 'issues',
-        action: payload.action || '',
-        sender: (payload.sender?.login || '').trim(),
-        sender_association: senderAssociation,
-        author: (payloadItem.user?.login || '').trim(),
-        author_association: (payloadItem.author_association || '').toUpperCase(),
-        title: payloadItem.title || '',
-        body: payloadItem.body || '',
+        action,
+        sender: sender.trim(),
+        sender_association,
+        author: author.trim(),
+        author_association,
+        title,
+        body,
     };
 }
 
