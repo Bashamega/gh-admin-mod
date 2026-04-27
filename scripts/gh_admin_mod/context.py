@@ -30,6 +30,12 @@ def load_context() -> ModerationContext:
     owner, repo = repository.split("/", 1)
     is_pull_request = pull_request is not None
 
+    sender_association = str(
+        event.get("author_association")
+        or (event.get("sender") or {}).get("author_association")
+        or ""
+    ).upper()
+
     return ModerationContext(
         owner=owner,
         repo=repo,
@@ -38,6 +44,9 @@ def load_context() -> ModerationContext:
         item_type="pull_request" if is_pull_request else "issue",
         item_type_label="pull request" if is_pull_request else "issue",
         item_type_plural="pull requests" if is_pull_request else "issues",
+        action=str(event.get("action") or ""),
+        sender=((event.get("sender") or {}).get("login") or "").strip(),
+        sender_association=sender_association,
         author=((payload_item.get("user") or {}).get("login") or "").strip(),
         author_association=str(payload_item.get("author_association") or "").upper(),
         title=str(payload_item.get("title") or ""),

@@ -51,6 +51,13 @@ def main() -> None:
         )
         return
 
+    if context.action == "reopened" and context.sender_association in exempt_associations:
+        notice(
+            f"Skipping because {context.item_type_label} was reopened by "
+            f"@{context.sender} ({context.sender_association}), who is exempt."
+        )
+        return
+
     result = blocklist.evaluate(context)
     if not result.matched:
         result = concurrency.evaluate(context)

@@ -10,6 +10,9 @@ class ModerationContext:
     item_type: str
     item_type_label: str
     item_type_plural: str
+    action: str
+    sender: str
+    sender_association: str
     author: str
     author_association: str
     title: str
