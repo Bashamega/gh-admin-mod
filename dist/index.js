@@ -29968,6 +29968,7 @@ function loadContext() {
     const issue = payload.issue;
     const pullRequest = payload.pull_request;
     const payloadItem = issue || pullRequest;
+    console.debug('Full GitHub event payload:', JSON.stringify(payload, null, 2));
     if (!payloadItem) {
         throw new Error('This action only supports issue and pull request events.');
     }
