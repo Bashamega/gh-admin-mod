@@ -1,0 +1,29 @@
+{
+  "name": "gh-admin-mod",
+  "version": "1.0.0",
+  "description": "Modular GitHub Action for blocking or auto-moderating issues and pull requests.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build src/main.ts -o dist --source-map --license licenses.txt",
+    "lint": "prettier --check \"**/*.ts\"",
+    "format": "prettier --write \"**/*.ts\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "github",
+    "actions",
+    "moderation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@vercel/ncc": "^0.38.1",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  }
+}

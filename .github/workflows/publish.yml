@@ -1,0 +1,70 @@
+name: Publish Action
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version type to increment (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version and Tag
+        id: versioning
+        run: |
+          npm version ${{ github.event.inputs.version_type }} -m "release: %s"
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit dist changes
+        run: |
+          git add dist/
+          if git diff --staged --quiet; then
+            echo "No changes in dist to commit"
+          else
+            git commit -m "build: bundle distribution for ${{ steps.versioning.outputs.tag }}"
+          fi
+
+      - name: Push changes and tags
+        run: |
+          git push origin main
+          git push origin ${{ steps.versioning.outputs.tag }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.versioning.outputs.tag }}
+          name: Release ${{ steps.versioning.outputs.tag }}
+          generate_release_notes: true

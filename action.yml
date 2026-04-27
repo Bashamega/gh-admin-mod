@@ -95,43 +95,15 @@ inputs:
 outputs:
   blocked:
     description: Whether the blocklist feature matched the author.
-    value: ${{ steps.moderate.outputs.blocked }}
   blocked-user:
     description: The blocked username that matched, if any.
-    value: ${{ steps.moderate.outputs.blocked-user }}
   item-type:
     description: The moderated item type, either issue or pull_request.
-    value: ${{ steps.moderate.outputs.item-type }}
   matched-feature:
     description: The feature that matched, such as blocklist or auto-mod.
-    value: ${{ steps.moderate.outputs.matched-feature }}
   match-reason:
     description: The reason returned by the matched moderation feature.
-    value: ${{ steps.moderate.outputs.match-reason }}
 
 runs:
-  using: composite
-  steps:
-    - id: moderate
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-        INPUT_BLOCKED_USERS_FILE: ${{ inputs.blocked-users-file }}
-        INPUT_BLOCK_ISSUES: ${{ inputs.block-issues }}
-        INPUT_BLOCK_PRS: ${{ inputs.block-prs }}
-        INPUT_EXEMPT_ASSOCIATIONS: ${{ inputs.exempt-associations }}
-        INPUT_COMMENT_MESSAGE: ${{ inputs.comment-message }}
-        INPUT_ADD_LABEL: ${{ inputs.add-label }}
-        INPUT_LOCK_CONVERSATION: ${{ inputs.lock-conversation }}
-        INPUT_CLOSE_REASON: ${{ inputs.close-reason }}
-        INPUT_DRY_RUN: ${{ inputs.dry-run }}
-        INPUT_AUTO_MOD: ${{ inputs.auto-mod }}
-        INPUT_AUTO_MOD_KEYWORDS: ${{ inputs.auto-mod-keywords }}
-        INPUT_AUTO_MOD_MAX_LINKS: ${{ inputs.auto-mod-max-links }}
-        INPUT_AUTO_MOD_NEW_CONTRIBUTORS_ONLY: ${{ inputs.auto-mod-new-contributors-only }}
-        INPUT_AUTO_MOD_COMMENT_MESSAGE: ${{ inputs.auto-mod-comment-message }}
-        INPUT_AUTO_MOD_LABEL: ${{ inputs.auto-mod-label }}
-        INPUT_CONCURRENCY_ENABLED: ${{ inputs.concurrency-enabled }}
-        INPUT_CONCURRENCY_LIMITS: ${{ inputs.concurrency-limits }}
-        INPUT_CONCURRENCY_COMMENT_MESSAGE: ${{ inputs.concurrency-comment-message }}
-      run: python3 "$GITHUB_ACTION_PATH/scripts/mod.py"
+  using: 'node20'
+  main: 'dist/index.js'
